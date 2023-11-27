@@ -55,34 +55,36 @@ const getFirstBooks = (booksArray) => {
 getFirstBooks(books);
 
 const bookProperties = ({author, title, id, image }) => {
-    const bookPreviewButton = document.createElement('button');
-    bookPreviewButton.classList.add('preview');
-    bookPreviewButton.setAttribute('previewBook-Id', id);
-    bookPreviewButton.innerHTML = 
-        `<img class = 'preview__image' scr = '${image}'?>
-         <div class = 'preview__info'> 
-              <h3 class = 'preview__title'> ${title}</h3>
-              <div class = 'preview__author'> ${authors[author]}`
-  return bookPreviewButton;
+    const bookPreviewData = document.createElement('button');
+    bookPreviewData.classList = 'preview';
+    bookPreviewData.setAttribute('book-Id', id);
+    bookPreviewData.innerHTML = 
+        `<img class='preview__image' src='${image}'/>
+
+        <div class='preview__info'>
+          <h3 class='preview__title'>${title}</h3>
+          <div class="preview__author">${authors[author]}</div>
+        </div>`;
+  return bookPreviewData;
 };
 
-const getBooks = (booksArray, appendSegment) => {
+const getBooks = (booksArray, fragment) => {
 
   for (let { author, title, image, id} of booksArray) {
-    const book = bookProperties({author, title, image, id});
-    appendSegment.appendChild(book);
-    listItems.appendChild(booksArray)
+    const book = bookProperties({author, title, image, id,});
+    fragment.appendChild(book);
+    listItems.appendChild(fragment);
   }
 };
 
 getBooks(firstLoadBooks, booksFragment);
 
 
-const clickedBook = '';
+let clickedBook = '';
 
 const checkBook = (event) => {
-  let bookData = event.target.closest('previewBook-Id');
-  let prewiewBookId = bookData ? bookData.getAtrribute('previewBook-Id') : '';
+  let element = event.target.closest('book-id');
+  let prewiewBookId = element ? element.getAttribute('book-id') : '';
 
   for (let book of books ) {
     if (book.id == prewiewBookId){
@@ -91,15 +93,15 @@ const checkBook = (event) => {
   }
 };
 
-const previewDataFill = (bookArray) => {
+const previewDataFill = (clickedBook) => {
 
-let publishedYear = new Date(bookArray.published).getFullYear()
+let publishedYear = new Date(clickedBook.published).getFullYear()
 
-  listImage.setAttribute('scr', bookArray.image);
-  listBlur.setAttribute('scr', bookArray.image);
-  listTitle.innerHTML = bookArray.title;
-  listSubtitle.innerHTML = `${authors[bookArray.author]} - ${publishedYear} `;
-  listDescription.innerHTML = bookArray.description;
+  listImage.setAttribute('scr', clickedBook.image);
+  listBlur.setAttribute('scr', clickedBook.image);
+  listTitle.innerHTML = clickedBook.title;
+  listSubtitle.innerHTML = `${authors[clickedBook.author]} - ${publishedYear} `;
+  listDescription.innerHTML = clickedBook.description;
   listDescription.style.overflowY = 'auto';
 };
 
@@ -111,7 +113,7 @@ listItems.addEventListener('click', (event) => {
 });
 
 listClose.addEventListener('click', (event) => {
-  listActive.closest();
+  listActive.close();
 });
 
 
@@ -161,59 +163,63 @@ listButton.addEventListener('click,', showMoreButtonHandler);
 
 
 const authorSelection = () => {
-  const optionTag = document.createElement('option');
-  optionTag.value = 'Any';
-  optionTag.textContent = 'All authors';
-  authorsFragment.appendChild(optionTag);
+  const allAuthors = document.createElement('option');
+  allAuthors.value = 'any';
+  allAuthors.textContent = 'All authors';
+  authorsFragment.appendChild(allAuthors);
 };
 
 const AddAuthors = () => {
   for (let [id, author] of Object.entries(authors)) {
-    const authorTag = document.createElement('option');
-    authorTag.value = id;
-    authorTag.textContent = author;
-    authorsFragment.appendChild(authorTag);
+    const authorsList = document.createElement('option');
+    authorsList.value = id;
+    authorsList.innerHTML = author;
+    authorsFragment.appendChild(authorsList);
   }
-  searchAuthors.appendChild(authorsFragment)
+  searchAuthors.appendChild(authorsFragment);
 };
-
-AddAuthors();
 authorSelection();
+AddAuthors();
+
 
 const genreSelection = () => {
-  const optionTag = document.createElement('option');
-  optionTag.value = 'Any';
-  optionTag.textContent = 'All authors';
-  authorsFragment.appendChild(optionTag);
+  const allGenres = document.createElement('option');
+  allGenres.value = 'any';
+  allGenres.textContent = 'All Genres';
+  genresFragment.appendChild(allGenres);
 };
 
 const AddGenres = () => {
   for (let [id, genre] of Object.entries(genres)) {
-    const genreTag = document.createElement('option');
-    genreTag.value = id;
-    genreTag.textContent = genre;
-    genresFragment.appendChild(genreTag);
+    const genresList = document.createElement('option');
+    genresList.value = id;
+    genresList.innerHTML = genre;
+    genresFragment.appendChild(genresList);
   }
-  searchGenres.appendChild(genresFragment)
+  searchGenres.appendChild(genresFragment);
 };
-
-AddGenres();
 genreSelection();
+AddGenres();
+
 
 
 const filteredBooks = (books, filters) => {
 
   for (let book of books) {
-    const titleMatches = filters.title.trim() === '' || book.title.toLowerCase().includes(filters.title.trim().toLowerCase());
-    const authorMatches = filters.author === 'Any' || book.author === filters.author;
-    const genreMatches = filters.genre === 'Any' || book.genre === filters.genre;
+    let titleMatches = filters.title.trim() === '' || book.title.toLowerCase().includes(filters.title.toLowerCase());
+    let authorMatches = filters.author === 'Any' || book.author === filters.author;
+    let genreMatches = filters.genre === 'Any' ;
+
+    for (let genre of book.genres){
+      if (genre === filters.genre){
+        genreMatches = true;
+      }
+    };
 
     if (titleMatches && authorMatches && genreMatches) {
       searches.push(book);
     }
-  }
-
-  return searches;
+  };
 };
 
 
@@ -223,8 +229,9 @@ const noResults = () => {
 
 const searchResults = (event) => {
   event.preventDefault();
-  searches.length = 0;
   page = 1;
+  searches.length = 0;
+  
 
 
 const form = new FormData(event.target);
@@ -242,16 +249,72 @@ getBooks(firstLoadBooks, searchesFragment);
 
 showMoreButton(searches);
 
-searchOverlay.closest();
-window.scrollTo({ top: 0, behavior: 'smooth'})
+searchOverlay.close();
+window.scrollTo({ top: 0, behavior: 'smooth'});
 
 };
-searchForm.addEventListener('submit',searchResults);
+searchForm.addEventListener('submit', searchResults);
 searchHeader.addEventListener('click', (event) => {
   searchOverlay.show();
   searchTitle.focus();
 });
 
 searchCancel.addEventListener('click', (event) =>{
-  searchOverlay.closest();
-})
+  searchOverlay.close();
+});
+const day = {
+  dark :'10, 10, 20',
+  light : '255, 255, 255'
+};
+
+const night = {
+  dark : '255, 255, 255',
+  light : '10, 10, 20',
+};
+
+const nightTheme = () => {
+  document.documentElement.style.setProperty("--color-dark", night.dark);
+  document.documentElement.style.setProperty("--color-light", night.light);
+};
+const dayTheme = () => {
+  document.documentElement.style.setProperty("--color-dark", day.dark);
+  document.documentElement.style.setProperty("--color-light", day.light);
+};
+
+const applyPreferredTheme = () => {
+
+  const isNightThemePreferred = settingstheme.value === "night";
+  const isBrowserDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+  if (isNightThemePreferred && isBrowserDarkMode) {
+    nightTheme();
+  } else {
+    dayTheme();
+  }
+};
+
+applyPreferredTheme();
+
+const themeSelectionHandler = (event) => {
+  event.preventDefault();
+
+  const theme = settingstheme.value;
+  if (theme === 'day') {
+    dayTheme();
+  } else if (theme === 'night') {
+    nightTheme();  
+  }
+      settingsoverlay.close();
+};
+settingsform.addEventListener('submit', themeSelectionHandler);
+
+settingsHeader.addEventListener('click', (event) => {
+
+  settingsoverlay.show();
+});
+
+settingscancel.addEventListener('click', (event) => {
+  settingsoverlay.close();
+});
+
+
